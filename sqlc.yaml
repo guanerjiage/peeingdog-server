@@ -1,0 +1,10 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "sql/queries"
+    schema: "sql/schema"
+    gen:
+      go:
+        out: "sql/queries/generated"
+        package: "generated"
+        emit_pointers_for_null_types: true

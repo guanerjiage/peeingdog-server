@@ -1,0 +1,61 @@
+version: '3'
+
+tasks:
+  deps:
+    desc: "Update Go dependencies"
+    cmds:
+      - go get -u ./...
+      - go mod tidy
+
+  db:up:
+    desc: "Start PostgreSQL database"
+    cmds:
+      - docker-compose up -d postgres
+      - echo "✓ Database started on localhost:5432"
+
+
+  db:down:
+    desc: "Stop PostgreSQL database"
+    cmds:
+      - docker-compose down
+      - echo "✓ Database stopped"
+
+  db:clear:
+    desc: "Clear database (drop and recreate)"
+    cmds:
+      - docker-compose exec -T postgres psql -U user -d postgres -c "DROP DATABASE IF EXISTS peeingdog;"
+      - docker-compose exec -T postgres psql -U user -d postgres -c "CREATE DATABASE peeingdog;"
+      - cat sql/schema/schema.sql | docker-compose exec -T postgres psql -U user -d peeingdog
+      - echo "✓ Database cleared and schema reinitialized"
+
+  db:reset:
+    desc: "Reset database (stop, clear, start)"
+    cmds:
+      - task: db:down
+      - task: db:up
+      - task: db:clear
+
+  run:
+    desc: "Start database and run server"
+    cmds:
+      - go run main.go
+
+  dev:fresh:
+    desc: "Fresh start: reset DB and run server"
+    cmds:
+      - task: db:reset
+      - sleep 2
+      - go run main.go
+
+  sqlc:generate:
+    desc: "Generate sqlc code from SQL queries"
+    cmds:
+      - sqlc generate
+      - echo "✓ sqlc code generated"
+
+  test:
+    desc: "Run tests"
+    cmds:
+      - go test ./...
+
+
