@@ -1,0 +1,75 @@
+name: Generate Swift Client
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'openapi.yaml'
+      - '.github/workflows/generate-swift-client.yml'
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout peeingdog-server
+        uses: actions/checkout@v4
+        with:
+          path: peeingdog-server
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Install OpenAPI Generator
+        run: |
+          brew install openapi-generator
+
+      - name: Generate Swift Client
+        working-directory: peeingdog-server
+        run: |
+          mkdir -p generated-swift
+          openapi-generator generate \
+            -i openapi.yaml \
+            -g swift5 \
+            -o generated-swift \
+            --additional-properties=packageName=PeeingdogAPI
+
+      - name: Checkout Swift Client Repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.SWIFT_CLIENT_REPO }}
+          token: ${{ secrets.SWIFT_CLIENT_REPO_TOKEN }}
+          path: peeingdog-swift-client
+
+      - name: Copy generated files
+        run: |
+          # Remove old generated files
+          rm -rf peeingdog-swift-client/OpenAPIClient/
+          rm -rf peeingdog-swift-client/docs/
+          rm -f peeingdog-swift-client/openapi.yaml
+          
+          # Copy new files
+          cp -r peeingdog-server/generated-swift/OpenAPIClient peeingdog-swift-client/
+          cp -r peeingdog-server/generated-swift/docs peeingdog-swift-client/
+          cp peeingdog-server/openapi.yaml peeingdog-swift-client/
+
+      - name: Commit and Push
+        working-directory: peeingdog-swift-client
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          
+          if git diff --quiet; then
+            echo "No changes detected"
+          else
+            git add -A
+            git commit -m "chore: auto-generate Swift client from openapi.yaml [skip ci]"
+            git push
+          fi
