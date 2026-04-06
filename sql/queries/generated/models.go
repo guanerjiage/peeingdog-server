@@ -17,8 +17,8 @@ type ArchivedMessage struct {
 	Latitude          string
 	Longitude         string
 	CreatedAt         time.Time
-	ExpiredAt         sql.NullTime
-	ArchivedAt        sql.NullTime
+	ExpiredAt         time.Time
+	ArchivedAt        time.Time
 }
 
 type Message struct {
@@ -27,7 +27,7 @@ type Message struct {
 	Text      string
 	Latitude  string
 	Longitude string
-	CreatedAt sql.NullTime
+	CreatedAt time.Time
 	ExpiresAt time.Time
 }
 

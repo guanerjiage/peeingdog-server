@@ -1,0 +1,404 @@
+openapi: 3.0.0
+info:
+  title: Peeingdog API
+  version: 1.0.0
+  description: Location-based messaging API with user management
+  contact:
+    name: Peeingdog Team
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+  - url: https://api.peeingdog.com
+    description: Production server
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns the health status of the API
+      operationId: getHealth
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+
+  /api/users:
+    get:
+      summary: List all users
+      description: Returns a list of all users
+      operationId: getUsers
+      tags:
+        - Users
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Create a new user
+      description: Creates a new user with the provided details
+      operationId: createUser
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/users/{id}:
+    get:
+      summary: Get user by ID
+      description: Returns a single user by their ID
+      operationId: getUserById
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid user ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/users/{id}/messages:
+    post:
+      summary: Create a new message
+      description: Creates a new location-based message for the user
+      operationId: createMessage
+      tags:
+        - Messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMessageRequest'
+      responses:
+        '201':
+          description: Message created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '400':
+          description: Invalid request body or parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    get:
+      summary: Get user's messages
+      description: Returns all active messages from a specific user
+      operationId: getUserMessages
+      tags:
+        - Messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: List of user's messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+        '400':
+          description: Invalid user ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/messages/nearby:
+    get:
+      summary: Get nearby messages
+      description: Returns all active messages within a specified radius of a location
+      operationId: getNearbyMessages
+      tags:
+        - Messages
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          description: Latitude of the center point
+          schema:
+            type: number
+            format: double
+            minimum: -90
+            maximum: 90
+        - name: lon
+          in: query
+          required: true
+          description: Longitude of the center point
+          schema:
+            type: number
+            format: double
+            minimum: -180
+            maximum: 180
+        - name: radius
+          in: query
+          required: true
+          description: Search radius in kilometers
+          schema:
+            type: number
+            format: double
+            minimum: 0
+      responses:
+        '200':
+          description: List of nearby messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - id
+        - name
+        - email
+        - created_at
+      properties:
+        id:
+          type: integer
+          format: int32
+          description: User ID
+          example: 1
+        name:
+          type: string
+          description: User's full name
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john@example.com"
+        created_at:
+          type: string
+          format: date-time
+          description: When the user was created
+          example: "2026-04-06T10:30:00Z"
+
+    CreateUserRequest:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        name:
+          type: string
+          description: User's full name
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john@example.com"
+
+    Message:
+      type: object
+      required:
+        - id
+        - user_id
+        - text
+        - latitude
+        - longitude
+        - created_at
+        - expires_at
+      properties:
+        id:
+          type: integer
+          format: int32
+          description: Message ID
+          example: 1
+        user_id:
+          type: integer
+          format: int32
+          description: ID of the user who sent the message
+          example: 1
+        text:
+          type: string
+          description: Message content (max 180 characters)
+          maxLength: 180
+          example: "Hello from NYC!"
+        latitude:
+          type: number
+          format: double
+          description: Latitude coordinate
+          minimum: -90
+          maximum: 90
+          example: 40.7128
+        longitude:
+          type: number
+          format: double
+          description: Longitude coordinate
+          minimum: -180
+          maximum: 180
+          example: -74.0060
+        created_at:
+          type: string
+          format: date-time
+          description: When the message was created
+          example: "2026-04-06T10:30:00Z"
+        expires_at:
+          type: string
+          format: date-time
+          description: When the message expires (24 hours after creation)
+          example: "2026-04-07T10:30:00Z"
+
+    CreateMessageRequest:
+      type: object
+      required:
+        - text
+        - latitude
+        - longitude
+      properties:
+        text:
+          type: string
+          description: Message content (max 180 characters)
+          maxLength: 180
+          example: "Hello from NYC!"
+        latitude:
+          type: number
+          format: double
+          description: Latitude coordinate
+          minimum: -90
+          maximum: 90
+          example: 40.7128
+        longitude:
+          type: number
+          format: double
+          description: Longitude coordinate
+          minimum: -180
+          maximum: 180
+          example: -74.0060
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Invalid request body"
+
+tags:
+  - name: Health
+    description: API health and status endpoints
+  - name: Users
+    description: User management endpoints
+  - name: Messages
+    description: Location-based messaging endpoints

@@ -28,3 +28,6 @@ go.work
 
 # Database
 *.db
+
+# clients codegen
+clients/

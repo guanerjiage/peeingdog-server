@@ -67,6 +67,10 @@ func main() {
 	// Use errgroup to manage concurrent goroutines
 	eg, ctx := errgroup.WithContext(context.Background())
 
+	// Channel for shutdown signal
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
 	// Goroutine 1: Run the server
 	eg.Go(func() error {
 		log.Printf("Server starting on http://localhost:%d\n", cfg.Port)
@@ -76,13 +80,15 @@ func main() {
 		return nil
 	})
 
-	// Goroutine 2: Listen for shutdown signals
+	// Goroutine 2: Listen for shutdown signals or context cancellation
 	eg.Go(func() error {
-		sigChan := make(chan os.Signal, 1)
-		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-
-		sig := <-sigChan
-		log.Printf("\nReceived signal: %v", sig)
+		select {
+		case sig := <-sigChan:
+			log.Printf("\nReceived signal: %v", sig)
+		case <-ctx.Done():
+			log.Println("Context cancelled, shutting down...")
+			return ctx.Err()
+		}
 
 		// Graceful shutdown with 10 second timeout
 		log.Println("Shutting down server gracefully...")

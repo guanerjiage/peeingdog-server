@@ -53,9 +53,37 @@ tasks:
       - sqlc generate
       - echo "✓ sqlc code generated"
 
+  swift:generate:
+    desc: "Generate Swift client from OpenAPI spec"
+    cmds:
+      - mkdir -p clients/swift
+      - openapi-generator generate -i openapi.yaml -g swift5 -o clients/swift --additional-properties=packageName=PeeingdogAPI
+      - echo "✓ Swift client generated"
+
+  python:generate:
+    desc: "Generate Python client from OpenAPI spec"
+    cmds:
+      - mkdir -p clients/python
+      - openapi-generator generate -i openapi.yaml -g python -o clients/python --additional-properties=packageName=peeingdog_api
+      - echo "✓ Python client generated"
+
+  typescript:generate:
+    desc: "Generate TypeScript client from OpenAPI spec"
+    cmds:
+      - mkdir -p clients/typescript
+      - openapi-generator generate -i openapi.yaml -g typescript-fetch -o clients/typescript --additional-properties=npmName=peeingdog-api
+      - echo "✓ TypeScript client generated"
+
+  clients:generate:
+    desc: "Generate all client SDKs (Swift, Python, TypeScript)"
+    cmds:
+      - task: swift:generate
+      - task: python:generate
+      - task: typescript:generate
+      - echo "✓ All clients generated"
+
   test:
     desc: "Run tests"
     cmds:
       - go test ./...
-
 

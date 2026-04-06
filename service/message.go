@@ -112,8 +112,8 @@ func (s *MessageService) GetNearbyMessages(ctx context.Context, latitude, longit
 			Text:      msg.Text,
 			Latitude:  lat,
 			Longitude: lon,
-			CreatedAt: msg.CreatedAt.Time,
-			ExpiresAt: msg.ExpiresAt.Time,
+			CreatedAt: msg.CreatedAt,
+			ExpiresAt: msg.ExpiresAt,
 		}
 	}
 	return result, nil
@@ -136,8 +136,8 @@ func (s *MessageService) GetUserMessages(ctx context.Context, userID int) ([]Mes
 			Text:      msg.Text,
 			Latitude:  lat,
 			Longitude: lon,
-			CreatedAt: msg.CreatedAt.Time,
-			ExpiresAt: msg.ExpiresAt.Time,
+			CreatedAt: msg.CreatedAt,
+			ExpiresAt: msg.ExpiresAt,
 		}
 	}
 	return result, nil

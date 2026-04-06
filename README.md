@@ -235,3 +235,79 @@ go run main.go
 # 4. Exit cleanly
 ```
 
+## OpenAPI & Client Generation
+
+The API is fully documented with OpenAPI 3.0 specification in `openapi.yaml`.
+
+### View API Documentation
+
+Start an interactive Swagger UI:
+
+```bash
+npm install -g @apidevtools/swagger-cli
+swagger-cli serve openapi.yaml
+```
+
+Then open http://localhost:8080
+
+### Generate Client SDKs
+
+Generate type-safe client libraries for multiple languages:
+
+#### Swift (iOS/macOS)
+```bash
+task swift:generate
+# Output: clients/swift/PeeingdogAPI/
+```
+
+Used for building iOS and macOS applications. The generated code includes:
+- Type-safe request/response models
+- Async/await support
+- Error handling
+- Codable JSON serialization
+
+#### Python
+```bash
+task python:generate
+# Output: clients/python/
+```
+
+#### TypeScript/JavaScript
+```bash
+task typescript:generate
+# Output: clients/typescript/
+```
+
+#### Generate All Clients
+```bash
+task clients:generate
+```
+
+### Swift Client Usage Example
+
+```swift
+import PeeingdogAPI
+
+// Initialize client
+let client = DefaultAPI()
+
+// Create a user
+let userRequest = CreateUserRequest(name: "John Doe", email: "john@example.com")
+let user = try await client.createUser(createUserRequest: userRequest)
+
+// Get nearby messages
+let messages = try await client.getNearbyMessages(
+    lat: 40.7128,
+    lon: -74.0060,
+    radius: 1.0
+)
+
+// Create a message
+let messageRequest = CreateMessageRequest(
+    text: "Hello from NYC!",
+    latitude: 40.7128,
+    longitude: -74.0060
+)
+let message = try await client.createMessage(id: user.id, createMessageRequest: messageRequest)
+```
+
